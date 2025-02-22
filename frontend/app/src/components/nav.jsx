@@ -10,7 +10,7 @@ export default function Navbar() {
       <div className="hidden md:flex space-x-12 text-gray-800 text-lg">
         <Link to="/explore" className="hover:text-black transition">Explore</Link>
         <Link to="/investments" className="hover:text-black transition">Investments</Link>
-        <Link to="/about" className="hover:text-black transition">About</Link>
+        <Link to="/portfolio" className="hover:text-black transition">Portfolio</Link>
       </div>
 
       {/* CTA Button */}

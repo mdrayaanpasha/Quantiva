@@ -101,7 +101,7 @@ export default function Home() {
       {/* Try Now Section */}
       <div className="bg-black h-60 mx-4 rounded-xl flex items-center justify-center flex-col text-center text-white">
         <h2 className="text-2xl font-bold mb-4">Start Analyzing Stocks Now</h2>
-        <button className="bg-white text-black px-6 py-3 rounded-xl font-bold">Try Now</button>
+        <button className="bg-white text-black px-6 py-3 rounded-xl font-bold" onClick={e=>window.location.href="./explore"}>Try Now</button>
       </div>
     </>
   );
