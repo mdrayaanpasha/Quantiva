@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import NavBar from "../../components/nav";
 
-const API_URL = "http://localhost:5000"; // Change if deployed
+const API_URL = "https://hackeverse-kjc.vercel.app/"; // Change if deployed
 
 const AddCompanies = () => {
   const [subscriptions, setSubscriptions] = useState([]);

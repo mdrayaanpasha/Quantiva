@@ -7,7 +7,7 @@ export default function ForgotPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/api/forgot-password", { email });
+      await axios.post("https://hackeverse-kjc.vercel.app/api/forgot-password", { email });
       alert("Password reset link sent to your email");
     } catch (error) {
       console.error("Error:", error);

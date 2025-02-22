@@ -1,0 +1,54 @@
+{
+    "routes": [
+      {
+        "src": "/",
+        "dest": "/"
+      },
+      {
+        "src": "/login",
+        "dest": "/"
+      },
+      {
+        "src": "/register",
+        "dest": "/"
+      },
+      {
+        "src": "/verify/:token",
+        "dest": "/"
+      },
+      {
+        "src": "/forgot-password",
+        "dest": "/"
+      },
+      {
+        "src": "/reset-password/:token",
+        "dest": "/"
+      },
+      {
+        "src": "/add-companies",
+        "dest": "/"
+      },
+      {
+        "src": "/investments",
+        "dest": "/"
+      },
+      {
+        "src": "/explore",
+        "dest": "/"
+      },
+      {
+        "src": "/company/:companyName",
+        "dest": "/"
+      },
+      {
+        "src": "/alert-breadCrumb",
+        "dest": "/"
+      },
+      {
+        "src": "/portfolio",
+        "dest": "/"
+      }
+    ]
+  }
+
+ 

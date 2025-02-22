@@ -12,7 +12,7 @@ export default function Explore() {
     const fetchSubscriptions = async () => {
       try {
         const token = localStorage.getItem("authToken");
-        const response = await fetch("http://localhost:5000/subscriptions", {
+        const response = await fetch("https://hackeverse-kjc.vercel.app/subscriptions", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -55,7 +55,7 @@ export default function Explore() {
   const handleSubscribe = async (company) => {
     try {
       const token = localStorage.getItem("authToken");
-      const response = await fetch("http://localhost:5000/subscribe", {
+      const response = await fetch("https://hackeverse-kjc.vercel.app/subscribe", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

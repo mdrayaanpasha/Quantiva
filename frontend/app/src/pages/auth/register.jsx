@@ -22,7 +22,7 @@ export default function Register() {
     setSuccess("");
 
     try {
-      const response = await axios.post("http://localhost:5000/api/register", formData);
+      const response = await axios.post("https://hackeverse-kjc.vercel.app/api/register", formData);
       setSuccess(response.data.message);
     } catch (error) {
       setError(error.response?.data?.message || "Registration failed");

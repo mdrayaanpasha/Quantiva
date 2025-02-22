@@ -18,10 +18,10 @@ export default function CompanyAnalysis() {
 
   useEffect(() => {
     const endpoints = [
-      { key: "reddit", url: `http://localhost:5000/api/getReddit/${companyName}` },
-      { key: "sec", url: `http://localhost:5000/api/getSEC/${companyName}` },
-      { key: "twitter", url: `http://localhost:5000/api/getTwitter/${companyName}` },
-      { key: "wallstreet", url: `http://localhost:5000/api/getWallstreet/${companyName}` }
+      { key: "reddit", url: `https://hackeverse-kjc.vercel.app/api/getReddit/${companyName}` },
+      { key: "sec", url: `https://hackeverse-kjc.vercel.app/api/getSEC/${companyName}` },
+      { key: "twitter", url: `https://hackeverse-kjc.vercel.app/api/getTwitter/${companyName}` },
+      { key: "wallstreet", url: `https://hackeverse-kjc.vercel.app/api/getWallstreet/${companyName}` }
     ];
 
     const fetchData = async () => {
@@ -49,7 +49,7 @@ export default function CompanyAnalysis() {
     setChatResponse(null);
     
     try {
-      const response = await axios.post("http://localhost:5000/api/chat", {
+      const response = await axios.post("https://hackeverse-kjc.vercel.app/api/chat", {
         query: userInput,
         company: companyName
       });

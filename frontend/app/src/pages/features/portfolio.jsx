@@ -19,7 +19,7 @@ export default function Portfolio() {
       const token = localStorage.getItem("authToken");
       if (!token) return console.log("No auth token found");
       
-      const response = await axios.get("http://localhost:5000/companies", {
+      const response = await axios.get("https://hackeverse-kjc.vercel.app/companies", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCompanies(response.data);
@@ -33,7 +33,7 @@ export default function Portfolio() {
 
   const fetchStockData = async (companies) => {
     try {
-      const response = await axios.post("http://localhost:5000/fetchStockPrices", companies);
+      const response = await axios.post("https://hackeverse-kjc.vercel.app/fetchStockPrices", companies);
       setStockData({ numerical: response.data.Numerical, textAnalysis: response.data.textAnlaysis });
     } catch (error) {
       console.error("Error fetching stock data:", error.response?.data || error);
@@ -51,7 +51,7 @@ export default function Portfolio() {
       if (!token) return console.log("No auth token found");
 
       const companyData = { ...company, noOfShares: Number(company.noOfShares) };
-      await axios.post("http://localhost:5000/addCompany", companyData, {
+      await axios.post("https://hackeverse-kjc.vercel.app/addCompany", companyData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

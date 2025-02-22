@@ -8,7 +8,7 @@ const Verify = () => {
   const [message, setMessage] = useState("Verifying...");
 
   useEffect(() => {
-    axios.post("http://localhost:5000/api/verify", { token })
+    axios.post("https://hackeverse-kjc.vercel.app/api/verify", { token })
       .then(res => {
         setMessage(res.data.message);
         localStorage.setItem("authToken", res.data.token); // Store JWT token

@@ -15,7 +15,7 @@ export default function AlertBreadCrumb() {
   useEffect(() => {
     const fetchSubscriptions = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/subscriptions", getAuthHeader());
+        const response = await axios.get("https://hackeverse-kjc.vercel.app/subscriptions", getAuthHeader());
         setSubscriptions(response.data.subscriptions || []);
       } catch (err) {
         console.error("Error fetching subscriptions", err);
@@ -29,7 +29,7 @@ export default function AlertBreadCrumb() {
     const fetchDataAPI = async () => {
       if (subscriptions.length > 0) {
         try {
-          const response = await axios.post("http://localhost:5000/alert-short", { companies: subscriptions });
+          const response = await axios.post("https://hackeverse-kjc.vercel.app/alert-short", { companies: subscriptions });
           setSummary(response.data.summary);
           setVisible(true);
           

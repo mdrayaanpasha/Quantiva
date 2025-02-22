@@ -15,15 +15,15 @@ export default function Investment() {
 
         if (token) {
             setLoading(true);
-            axios.get("http://localhost:5000/subscriptions", {
+            axios.get("https://hackeverse-kjc.vercel.app/subscriptions", {
                 headers: { Authorization: `Bearer ${token}` }
             })
             .then(response => {
                 const companies = response.data.subscriptions || [];
                 setSubscriptions(companies);
                 return Promise.all([
-                    axios.post("http://localhost:5000/investment-bad-analysis", { companies }),
-                    axios.post("http://localhost:5000/investment-good-analysis", { companies }),
+                    axios.post("https://hackeverse-kjc.vercel.app/investment-bad-analysis", { companies }),
+                    axios.post("https://hackeverse-kjc.vercel.app/investment-good-analysis", { companies }),
                 ]);
             })
             .then(([bad, good]) => {

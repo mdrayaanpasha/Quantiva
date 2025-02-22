@@ -8,10 +8,10 @@ import AlertBreadCrumb from "../alerts/alert-breadcrumb";
 
 export default function Home() {
   const stockEndpoints = [
-    { name: "Reddit Analysis", url: "http://localhost:5000/reddit-stock-analysis", icon: <HashtagIcon className="h-6 w-6 text-blue-500" /> },
-    { name: "Twitter Analysis", url: "http://localhost:5000/x-stock-analysis", icon: <ChartBarIcon className="h-6 w-6 text-cyan-500" /> },
-    { name: "Wall Street Insights", url: "http://localhost:5000/wallstreet-stock-analysis", icon: <BanknotesIcon className="h-6 w-6 text-green-500" /> },
-    { name: "SEC Filings", url: "http://localhost:5000/sec-stock-analysis", icon: <ShieldCheckIcon className="h-6 w-6 text-yellow-500" /> },
+    { name: "Reddit Analysis", url: "https://hackeverse-kjc.vercel.app/reddit-stock-analysis", icon: <HashtagIcon className="h-6 w-6 text-blue-500" /> },
+    { name: "Twitter Analysis", url: "https://hackeverse-kjc.vercel.app/x-stock-analysis", icon: <ChartBarIcon className="h-6 w-6 text-cyan-500" /> },
+    { name: "Wall Street Insights", url: "https://hackeverse-kjc.vercel.app/wallstreet-stock-analysis", icon: <BanknotesIcon className="h-6 w-6 text-green-500" /> },
+    { name: "SEC Filings", url: "https://hackeverse-kjc.vercel.app/sec-stock-analysis", icon: <ShieldCheckIcon className="h-6 w-6 text-yellow-500" /> },
   ];
 
   const [data, setData] = useState([]);

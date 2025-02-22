@@ -10,7 +10,7 @@ export default function ResetPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-        await axios.post("http://localhost:5000/api/reset-password", { token, newPassword: password });
+        await axios.post("https://hackeverse-kjc.vercel.app/api/reset-password", { token, newPassword: password });
 
                 alert("Password reset successful");
     } catch (error) {

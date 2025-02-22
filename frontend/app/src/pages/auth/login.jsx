@@ -17,7 +17,7 @@ export default function Login() {
     setSuccess("");
 
     try {
-      const response = await axios.post("http://localhost:5000/api/login", formData);
+      const response = await axios.post("https://hackeverse-kjc.vercel.app/api/login", formData);
       
       localStorage.removeItem("authToken");  // Clear old token 
       console.log(response.data.token) 
