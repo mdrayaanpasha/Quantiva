@@ -14,7 +14,10 @@ app.use(cors())
 app.use(morgan())
 app.use(express.json());
 
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose
+  .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("MongoDB connected successfully"))
+  .catch((err) => console.error("MongoDB connection error:", err));
 
 import bcrypt from "bcrypt";
 
@@ -709,8 +712,7 @@ app.post("/fetchStockPrices", async (req, res) => {
         {
           contents: [{ 
             parts: [{ 
-              "text": `${tempStockData} — these were my investments, now give me a portfoilio score out of 100. based on profits i made, also tell me if i should continue this investment, make that descion on the basis of reddit and x trends with SEC fillings of the companies and stuff. No generic advice—just raw, data-driven insights. answer must be direct no fluff` 
-            }] 
+              "text": `${JSON.stringify(tempStockData, null, 2)} — these were my investments, imagine you are an investment portfolio analyst, score my stocks out of 100, and also tell me how it aligns with recent trends in stock market based on reddit and twitter trends `     }] 
           }],
 },
         {
