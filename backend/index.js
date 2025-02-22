@@ -7,7 +7,6 @@ import cors from "cors";
 import axios from "axios";
 import yahooFinance from "yahoo-finance2";
 import morgan from "morgan";
-import serverless from "serverless-http"
 
 
 dotenv.config();
@@ -746,4 +745,3 @@ app.post("/fetchStockPrices", async (req, res) => {
 
 
 app.listen(5000, () => console.log("Server running on port 5000"));
-module.exports = serverless(app);
