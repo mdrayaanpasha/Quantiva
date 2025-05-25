@@ -15,6 +15,7 @@ const Subscription = mongoose.model("Subscription", SubscriptionSchema);
 const CompanyModel = mongoose.model("Company", companySchema);
 
 class InvestmentsController {
+
     async badInvestMentAnalysis(req, res) {
         const { companies } = req.body;
         const apiKey = process.env.GEMINI_API_KEY;
@@ -25,7 +26,7 @@ class InvestmentsController {
         }
 
         try {
-            const prompt = `Analyze the financial performance of the following companies: ${companies.join(", ")}, from recent wall street journals and reddit posts. Tell me which of the given companies are bad performing, why they are bad performing, based only on reddit and wall street analysis. Make it minimalist.`;
+            const prompt = `Analyze the financial performance of the following companies: ${companies.join(", ")} based on recent Wall Street Journal articles and Reddit posts. Identify which are underperforming and explain why, using only insights from those sources. Be minimalist. No disclaimers, no intros, no chatbot-style language — just the facts.`;
 
             const response = await axios.post(
                 "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
@@ -57,7 +58,7 @@ class InvestmentsController {
         }
 
         try {
-            const prompt = `Analyze the financial performance of the following companies: ${companies.join(", ")}, from recent wall street journals and reddit posts. Tell me which of the given companies are good performing, why they are good performing, based only on reddit and wall street analysis. Make it minimalist.`;
+            const prompt = `Analyze the financial performance of the following companies: ${companies.join(", ")} based on recent Wall Street Journal articles and Reddit posts. Identify which are performing well and explain why, using only insights from those sources. Be minimalist. No disclaimers, no intros, no chatbot-style language — just the facts.`;
 
             const response = await axios.post(
                 "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
@@ -149,7 +150,7 @@ class InvestmentsController {
                     {
                         contents: [{
                             parts: [{
-                                "text": `${JSON.stringify(tempStockData, null, 2)} — these were my investments, imagine you are an investment portfolio analyst, score my stocks out of 100, and also tell me how it aligns with recent trends in stock market based on reddit and twitter trends `
+                                text: `Here is my investment data: ${JSON.stringify(tempStockData, null, 2)}. Act as an investment portfolio analyst. Score each stock out of 100 and explain how they align with recent Reddit and Twitter market trends. Be concise, specific, and avoid generic statements or disclaimers.`
                             }]
                         }],
                     },

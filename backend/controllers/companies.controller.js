@@ -41,7 +41,7 @@ class CompanyController {
 
     async getRedditAnalysis(req, res) {
         const { companyName } = req.params;
-        const prompt = `Summarize recent Reddit discussions on ${companyName}'s stock: trends, sentiment, and hot takes. Make the response concise and to the point while personalizing the experience. Don't generalize; mention which source said what. Overall, be concise, minimalist, and professional.`;
+        const prompt = `Summarize recent Reddit posts about ${companyName}'s stock. Focus on key trends, sentiment, and specific user or subreddit takes. Avoid generalizations. Be concise, factual, and professional. Do not include any disclaimers, introductions like "okay," or chatbot-style language. Just the core insights.`;
         try {
             const summary = await this.fetchGeminiAnalysis(prompt);
             res.json({ summary });
@@ -52,7 +52,7 @@ class CompanyController {
 
     async getSECAnalysis(req, res) {
         const { companyName } = req.params;
-        const prompt = `Summarize the latest SEC filings for ${companyName}. Focus on earnings, risks, and major disclosures. Make the response concise and to the point while personalizing the experience. Don't generalize; mention which source said what. Overall, be concise, minimalist, and professional.`;
+        const prompt = `Summarize the latest SEC filings for ${companyName}. Highlight earnings, risk factors, and key disclosures. Reference specific forms (e.g., 10-K, 10-Q) or sections when possible. Be concise, factual, and professional. Do not include disclaimers, intros like "okay," or chatbot-style language. Just deliver the core insights.`;
         try {
             const summary = await this.fetchGeminiAnalysis(prompt);
             res.json({ summary });
@@ -63,7 +63,7 @@ class CompanyController {
 
     async getTwitterAnalysis(req, res) {
         const { companyName } = req.params;
-        const prompt = `Summarize Twitter sentiment on ${companyName}: major tweets, investor opinions, and trending topics. Make the response concise and to the point while personalizing the experience. Don't generalize; mention which source said what. Overall, be concise, minimalist, and professional.`;
+        const prompt = `Summarize Twitter sentiment on ${companyName}. Focus on major tweets, investor opinions, and trending topics. Reference specific users or tweets when possible. Be concise, factual, and professional. No disclaimers, no greetings, no chatbot-style language — just the core insights.`;
         try {
             const summary = await this.fetchGeminiAnalysis(prompt);
             res.json({ summary });
@@ -74,7 +74,7 @@ class CompanyController {
 
     async getWallStreetAnalysis(req, res) {
         const { companyName } = req.params;
-        const prompt = `Summarize discussions on WallStreetBets about ${companyName}: memes, speculation, and market outlook. Make the response concise and to the point while personalizing the experience. Don't generalize; mention which source said what. Overall, be concise, minimalist, and professional.`;
+        const prompt = `Summarize WallStreetBets discussions about ${companyName}. Cover memes, speculation, and market outlook. Call out specific users or posts when possible. Be concise, direct, and professional. No disclaimers, no intros, no chatbot filler — just the core insights.`;
         try {
             const summary = await this.fetchGeminiAnalysis(prompt);
             res.json({ summary });

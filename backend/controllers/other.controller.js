@@ -32,7 +32,7 @@ class otherController {
                         {
                             parts: [
                                 {
-                                    text: `Workspace real-time data from Wall Street, Reddit, and X posts to analyze my invested ${companies}. Provide a 15-word summary on which are likely to decline and why, based on the latest sentiment and market trends.`
+                                    text: `Using real-time data from Wall Street, Reddit, and X, analyze my investments in ${companies}. Provide a 15-word summary identifying which are likely to decline and why, based on current sentiment and market trends. No fluff or disclaimers.`
                                 },
                             ],
                         },
@@ -64,7 +64,11 @@ class otherController {
             const response = await axios.post(
                 "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
                 {
-                    contents: [{ parts: [{ "text": `${userMessage} (User's message). Now, analyze the situation of ~${company} with a **concise, minimalist, and non-generic response**. The response should incorporate insights from **Reddit sentiment**, **SEC filings**, **Wall Street Journal**, **Bloomberg**, and other relevant sources. The goal is to provide **actionable intelligence**—not vague suggestions—so the user can make an informed decision. Avoid telling the user to consult a professional; assume they are assessing the model independently., let the response be binary yes or no. with some explanation on why.` }] }],
+                    contents: [{
+                        parts: [{
+                            text: `${userMessage} (User's message). Analyze ${company} with a concise, minimalist, non-generic response. Use insights from Reddit sentiment, SEC filings, Wall Street Journal, Bloomberg, and other relevant sources. Provide clear, actionable intelligence—yes or no—with brief explanation. No disclaimers or "consult a professional" advice.`
+                        }]
+                    }]
                 },
                 {
                     headers: { "Content-Type": "application/json" },
