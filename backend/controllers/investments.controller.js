@@ -1,10 +1,9 @@
-import { fetchGeminiAnalysis } from "../services/util.js";
 import express from "express";
 import mongoose from "mongoose";
-import jwt, { decode } from "jsonwebtoken";
-import nodemailer from "nodemailer";
+import axios from "axios";
 import dotenv from "dotenv";
-import bcrypt from "bcrypt";
+import yahooFinance from "yahoo-finance2";
+
 dotenv.config();
 
 import userSchema from "../schemas/userSchema.js";
@@ -14,7 +13,6 @@ import companySchema from "../schemas/companySchema.js";
 const User = mongoose.model("User", userSchema);
 const Subscription = mongoose.model("Subscription", SubscriptionSchema);
 const CompanyModel = mongoose.model("Company", companySchema);
-
 
 class InvestmentsController {
     async badInvestMentAnalysis(req, res) {
@@ -27,8 +25,7 @@ class InvestmentsController {
         }
 
         try {
-            const prompt = `
-        Analyze the financial performance of the following companies: ${companies.join(", ")}, from recent wall street journals and reddit posts and tell me which of the given companies are bad performing, just give me them and why are they bad performing, based on reddit and wall street analysis nothing else, make it minimalist.`;
+            const prompt = `Analyze the financial performance of the following companies: ${companies.join(", ")}, from recent wall street journals and reddit posts. Tell me which of the given companies are bad performing, why they are bad performing, based only on reddit and wall street analysis. Make it minimalist.`;
 
             const response = await axios.post(
                 "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
@@ -42,14 +39,13 @@ class InvestmentsController {
             );
 
             const generatedText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
-            console.log(generatedText)
+            console.log(generatedText);
             res.json({ analysis: generatedText });
         } catch (error) {
             console.error("Error:", error.response?.data || error.message);
             res.status(500).send("Failed to fetch analysis");
         }
     }
-
 
     async goodInvestmentAnalysis(req, res) {
         const { companies } = req.body;
@@ -61,8 +57,7 @@ class InvestmentsController {
         }
 
         try {
-            const prompt = `
-      Analyze the financial performance of the following companies: ${companies.join(", ")}, from recent wall street journals and reddit posts and tell me which of the given companies are good performing, just give me them and why are they good performing, based on reddit and wall street analysis nothing else make it minimalist.`;
+            const prompt = `Analyze the financial performance of the following companies: ${companies.join(", ")}, from recent wall street journals and reddit posts. Tell me which of the given companies are good performing, why they are good performing, based only on reddit and wall street analysis. Make it minimalist.`;
 
             const response = await axios.post(
                 "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
@@ -76,7 +71,7 @@ class InvestmentsController {
             );
 
             const generatedText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
-            console.log(generatedText)
+            console.log(generatedText);
             res.json({ analysis: generatedText });
         } catch (error) {
             console.error("Error:", error.response?.data || error.message);
@@ -85,7 +80,6 @@ class InvestmentsController {
     }
 
     async scoreInvestments(req, res) {
-
         try {
             const { stocks } = req.body;
             if (!Array.isArray(stocks) || stocks.length === 0) {
@@ -108,7 +102,8 @@ class InvestmentsController {
                         continue;
                     }
 
-                    console.log(`Fetching data for ${stock.name}...`);
+                    console.log(`Workspaceing data for ${stock.name}...`);
+                    // Ensure yahooFinance is correctly imported and used
                     const result = await yahooFinance.historical(stock.name, {
                         period1: startDate,
                         period2: today,
@@ -132,7 +127,7 @@ class InvestmentsController {
                         profit: profit.toFixed(2),
                     });
 
-                    console.log(stock)
+                    console.log(stock);
 
                 } catch (err) {
                     console.error(`Error fetching data for ${stock.name}:`, err.message);
@@ -144,9 +139,9 @@ class InvestmentsController {
             }
 
             const apiKey = process.env.GEMINI_API_KEY;
+            // Removed fetchGeminiAnalysis since it was unused and the axios call is directly inlined
             const tempStockData = stockData.map(({ price, ...rest }) => rest);
             console.log("tempstock", tempStockData);
-
 
             try {
                 const response = await axios.post(
@@ -164,18 +159,13 @@ class InvestmentsController {
                     }
                 );
 
-
-
                 const botResponse = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response from Gemini";
-                res.send({ textAnlaysis: botResponse, Numerical: stockData })
+                res.send({ textAnlaysis: botResponse, Numerical: stockData });
 
             } catch (error) {
                 console.error("Error:", error.response?.data || error.message);
                 res.status(500).json({ error: "Failed to fetch response from Gemini" });
             }
-
-
-
 
         } catch (error) {
             console.error("Server error:", error);
@@ -183,6 +173,5 @@ class InvestmentsController {
         }
     }
 }
-
 
 export default new InvestmentsController();
