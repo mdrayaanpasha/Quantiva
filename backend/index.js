@@ -15,6 +15,7 @@ import userSchema from "./schemas/userSchema.js";
 import SubscriptionSchema from "./schemas/subscriptionSchema.js";
 import companySchema from "./schemas/companySchema.js";
 import AuthRouter from "./routers/auth.router.js";
+import investmentRouter from "./routers/investment.router.js";
 
 const app = express();
 app.use(cors())
@@ -57,6 +58,35 @@ const verifyToken = (req, res, next) => {
   }
 };
 
+
+const fetchGeminiAnalysis = async (prompt) => {
+  try {
+    const response = await axios.post(
+      "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
+      {
+        contents: [{ parts: [{ text: prompt }] }],
+      },
+      {
+        headers: { "Content-Type": "application/json" },
+        params: { key: apiKey },
+      }
+    );
+    return response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
+  } catch (error) {
+    console.error("Error fetching Gemini API data:", error.response?.data || error.message);
+    return "Failed to fetch data";
+  }
+};
+
+const transporter = nodemailer.createTransport({
+  service: "Gmail",
+  auth: { user: process.env.EMAIL, pass: process.env.EMAIL_PASS },
+});
+
+
+
+//  = = = = = = SUBSCRIPTION BASED = = = = == 
+
 app.get("/subscriptions", verifyToken, async (req, res) => {
   try {
     const email = req.user.email;
@@ -95,121 +125,13 @@ app.post("/subscribe", verifyToken, async (req, res) => {
 });
 
 
-
-
-const transporter = nodemailer.createTransport({
-  service: "Gmail",
-  auth: { user: process.env.EMAIL, pass: process.env.EMAIL_PASS },
-});
-
-
 // = = = = = = AUTH = = = = = =
 
-app.post("/api/register", async (req, res) => {
-  const { username, email, password } = req.body;
-  const existingUser = await User.findOne({ email });
-
-  if (existingUser) return res.status(400).json({ error: "User already exists" });
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const newUser = new User({ username, email, password: hashedPassword });
-  await newUser.save();
-
-  // Send email verification
-  const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "1h" });
-  const verifyLink = `${process.env.FRONTEND_URL}/verify/${token}`;
-
-  await transporter.sendMail({
-    to: email,
-    subject: "Verify Your Email",
-    text: `Click here to verify: ${verifyLink}`,
-  });
-
-  res.json({ message: "Verification email sent" });
-});
+app.use("/api/auth", AuthRouter);
 
 
-app.post("/api/login", async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-
-  if (!user) return res.status(400).json({ error: "User not found" });
-  if (!user.verified) return res.status(400).json({ error: "Email not verified" });
-
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) return res.status(400).json({ error: "Incorrect password" });
-
-  const authToken = jwt.sign({ email: user.email, id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
-
-  res.json({ message: "Login successful", token: authToken });
-});
-
-
-app.post("/api/forgot-password", async (req, res) => {
-  const { email } = req.body;
-  const user = await User.findOne({ email });
-
-  if (!user) return res.status(400).json({ error: "User not found" });
-
-  const resetToken = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: "15m" });
-
-  const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-  await transporter.sendMail({
-    to: email,
-    subject: "Reset Your Password",
-    text: `Click here to reset: ${resetLink}`,
-  });
-
-  res.json({ message: "Password reset email sent" });
-});
-
-app.post("/api/reset-password", async (req, res) => {
-  const { token, newPassword } = req.body;
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log(decoded.email)
-    const user = await User.findOne({ email: decoded.email });
-
-    if (!user) return res.status(400).json({ error: "User not found" });
-
-    user.password = await bcrypt.hash(newPassword, 10);
-    await user.save();
-
-    res.json({ message: "Password reset successful" });
-  } catch (err) {
-    res.status(400).json({ error: "Invalid or expired token" });
-  }
-});
-
-
-
-app.post("/api/verify", async (req, res) => {
-  const { token } = req.body;
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findOne({ email: decoded.email });
-
-    if (!user) return res.status(400).json({ message: "User not found" });
-
-    if (!user.verified) {
-      user.verified = true;
-      await user.save();
-    }
-
-    const authToken = jwt.sign({ email: user.email, id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
-
-    return res.json({ message: "Email verified successfully", token: authToken });
-  } catch (err) {
-    return res.status(400).json({ message: "Invalid or expired token" });
-  }
-});
-
-
-app.use("/api/auth/", AuthRouter);
-
-
+// = = =  = Investments = = = = = 
+app.use("/api/investments", investmentRouter);
 
 app.post("/investment-bad-analysis", async (req, res) => {
   const { companies } = req.body;
@@ -274,226 +196,6 @@ app.post("/investment-good-analysis", async (req, res) => {
   } catch (error) {
     console.error("Error:", error.response?.data || error.message);
     res.status(500).send("Failed to fetch analysis");
-  }
-});
-
-app.post("/investment-neutral-analysis", async (req, res) => {
-  const { companies } = req.body;
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) return res.status(500).send("Missing API Key");
-  if (!companies || !Array.isArray(companies) || companies.length === 0) {
-    return res.status(400).send("Invalid company list");
-  }
-
-  try {
-    const prompt = `
-      Analyze the financial performance of the following companies: ${companies.join(", ")}, from recent wall street journals and reddit posts and tell me which of the given companies are neutral performing, just give me them and why are they neutral pro performing, based on reddit and wall street analysis nothing else make it minimalist.`;
-
-    const response = await axios.post(
-      "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
-      {
-        contents: [{ parts: [{ text: prompt }] }],
-      },
-      {
-        headers: { "Content-Type": "application/json" },
-        params: { key: apiKey },
-      }
-    );
-
-    const generatedText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
-    console.log(generatedText)
-    res.json({ analysis: generatedText });
-  } catch (error) {
-    console.error("Error:", error.response?.data || error.message);
-    res.status(500).send("Failed to fetch analysis");
-  }
-});
-
-
-
-const fetchGeminiAnalysis = async (prompt) => {
-  try {
-    const response = await axios.post(
-      "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
-      {
-        contents: [{ parts: [{ text: prompt }] }],
-      },
-      {
-        headers: { "Content-Type": "application/json" },
-        params: { key: apiKey },
-      }
-    );
-    return response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
-  } catch (error) {
-    console.error("Error fetching Gemini API data:", error.response?.data || error.message);
-    return "Failed to fetch data";
-  }
-};
-
-app.get("/api/getReddit/:companyName", async (req, res) => {
-  const { companyName } = req.params;
-  const prompt = `Summarize recent Reddit discussions on ${companyName}'s stock: trends, sentiment, and hot takes. make the response concise and to the point while personalizing the experience, dont generlize mention which source said what, overall be concise and minimalist and proffessional`;
-  const summary = await fetchGeminiAnalysis(prompt);
-  res.json({ summary });
-});
-
-app.get("/api/getSEC/:companyName", async (req, res) => {
-  const { companyName } = req.params;
-  const prompt = `Summarize the latest SEC filings for ${companyName}. Focus on earnings, risks, and major disclosures. make the response concise and to the point while personalizing the experience, dont generlize mention which source said what, overall be concise and minimalist and proffessional`;
-  const summary = await fetchGeminiAnalysis(prompt);
-  res.json({ summary });
-});
-
-app.get("/api/getTwitter/:companyName", async (req, res) => {
-  const { companyName } = req.params;
-  const prompt = `Summarize Twitter sentiment on ${companyName}: major tweets, investor opinions, and trending topics. make the response concise and to the point while personalizing the experience, dont generlize mention which source said what, overall be concise and minimalist and proffessional`;
-  const summary = await fetchGeminiAnalysis(prompt);
-  res.json({ summary });
-});
-
-app.get("/api/getwallstreet/:companyName", async (req, res) => {
-  const { companyName } = req.params;
-  const prompt = `Summarize discussions on WallStreetBets about ${companyName}: memes, speculation, and market outlook. make the response concise and to the point while personalizing the experience, dont generlize mention which source said what, overall be concise and minimalist and proffessional`;
-  const summary = await fetchGeminiAnalysis(prompt);
-  res.json({ summary });
-});
-
-
-app.post("/alert-short", async (req, res) => {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) return res.status(500).send("Missing API Key");
-
-  const companies = req.body.companies;
-  console.log(companies)
-
-
-
-
-  try {
-    const response = await axios.post(
-      "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
-      {
-        contents: [
-          {
-            parts: [
-              {
-                text: `Fetch real-time data from Wall Street, Reddit, and X posts to analyze my invested ${companies}. Provide a 15-word summary on which are likely to decline and why, based on the latest sentiment and market trends.`
-              },
-            ],
-          },
-        ],
-      },
-      {
-        headers: { "Content-Type": "application/json" },
-        params: { key: apiKey },
-      }
-    );
-
-    const generatedText =
-      response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
-    res.json({ summary: generatedText });
-  } catch (error) {
-    console.error("Error:", error.response?.data || error.message);
-    res.status(500).send("Failed to fetch data");
-  }
-});
-
-app.post("/api/chat", async (req, res) => {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) return res.status(500).send("Missing API Key");
-
-  const userMessage = req.body.query;
-  const company = req.body.company;
-
-  console.log("User Input:", userMessage, "Company Name: ", company);
-
-  try {
-    const response = await axios.post(
-      "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
-      {
-        contents: [{ parts: [{ "text": `${userMessage} (User's message). Now, analyze the situation of ~${company} with a **concise, minimalist, and non-generic response**. The response should incorporate insights from **Reddit sentiment**, **SEC filings**, **Wall Street Journal**, **Bloomberg**, and other relevant sources. The goal is to provide **actionable intelligence**—not vague suggestions—so the user can make an informed decision. Avoid telling the user to consult a professional; assume they are assessing the model independently., let the response be binary yes or no. with some explanation on why.` }] }],
-      },
-      {
-        headers: { "Content-Type": "application/json" },
-        params: { key: apiKey },
-      }
-    );
-
-    const botResponse = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response from Gemini";
-    res.json({ response: botResponse });
-  } catch (error) {
-    console.error("Error:", error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to fetch response from Gemini" });
-  }
-});
-
-app.post("/addCompany", verifyToken, async (req, res) => {
-  try {
-    const { name, date, noOfShares } = req.body;
-
-    if (!req.user || !req.user.email) {
-      return res.status(401).json({ error: "Unauthorized: Email missing in token" });
-    }
-
-    const email = req.user.email; // Extracted from JWT
-    console.log("User email from token:", email);
-
-    // Fetch ticker symbol from Gemini
-    let tikkr = "UNKNOWN"; // Default ticker
-
-    try {
-      const apiKey = process.env.GEMINI_API_KEY; // Store API key in env
-
-      const response = await axios.post(
-        "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
-        {
-          contents: [
-            {
-              parts: [
-                {
-                  text: `What is the stock ticker symbol for the company "${name}"? Return ONLY the ticker symbol, nothing else.`,
-                },
-              ],
-            },
-          ],
-        },
-        {
-          headers: { "Content-Type": "application/json" },
-          params: { key: apiKey },
-        }
-      );
-
-      tikkr = response.data?.candidates?.[0]?.content?.trim() || "UNKNOWN"; // Extract and clean ticker symbol
-    } catch (error) {
-      console.error("Gemini API Error:", error.message);
-    }
-
-    // Save company with fetched ticker symbol
-    const newCompany = new CompanyModel({
-      name,
-      date: new Date(date), // Convert string to Date object
-      noOfShares,
-      email,
-      tikkr, // Store ticker symbol
-    });
-
-    await newCompany.save();
-    res.status(201).json({ message: "Company added successfully", tikkr });
-  } catch (error) {
-    console.error("Database Save Error:", error);
-    res.status(500).json({ error: "Failed to add company", details: error.message });
-  }
-});
-
-app.get("/companies", verifyToken, async (req, res) => {
-  try {
-    const companies = await CompanyModel.find({ email: req.user.email });
-    res.json(companies);
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -596,6 +298,176 @@ app.post("/fetchStockPrices", async (req, res) => {
 });
 
 
+// = = = COMPANIES = = = = 
+
+app.get("/api/getReddit/:companyName", async (req, res) => {
+  const { companyName } = req.params;
+  const prompt = `Summarize recent Reddit discussions on ${companyName}'s stock: trends, sentiment, and hot takes. make the response concise and to the point while personalizing the experience, dont generlize mention which source said what, overall be concise and minimalist and proffessional`;
+  const summary = await fetchGeminiAnalysis(prompt);
+  res.json({ summary });
+});
+
+app.get("/api/getSEC/:companyName", async (req, res) => {
+  const { companyName } = req.params;
+  const prompt = `Summarize the latest SEC filings for ${companyName}. Focus on earnings, risks, and major disclosures. make the response concise and to the point while personalizing the experience, dont generlize mention which source said what, overall be concise and minimalist and proffessional`;
+  const summary = await fetchGeminiAnalysis(prompt);
+  res.json({ summary });
+});
+
+app.get("/api/getTwitter/:companyName", async (req, res) => {
+  const { companyName } = req.params;
+  const prompt = `Summarize Twitter sentiment on ${companyName}: major tweets, investor opinions, and trending topics. make the response concise and to the point while personalizing the experience, dont generlize mention which source said what, overall be concise and minimalist and proffessional`;
+  const summary = await fetchGeminiAnalysis(prompt);
+  res.json({ summary });
+});
+
+app.get("/api/getwallstreet/:companyName", async (req, res) => {
+  const { companyName } = req.params;
+  const prompt = `Summarize discussions on WallStreetBets about ${companyName}: memes, speculation, and market outlook. make the response concise and to the point while personalizing the experience, dont generlize mention which source said what, overall be concise and minimalist and proffessional`;
+  const summary = await fetchGeminiAnalysis(prompt);
+  res.json({ summary });
+});
+
+
+app.post("/addCompany", verifyToken, async (req, res) => {
+  try {
+    const { name, date, noOfShares } = req.body;
+
+    if (!req.user || !req.user.email) {
+      return res.status(401).json({ error: "Unauthorized: Email missing in token" });
+    }
+
+    const email = req.user.email; // Extracted from JWT
+    console.log("User email from token:", email);
+
+    // Fetch ticker symbol from Gemini
+    let tikkr = "UNKNOWN"; // Default ticker
+
+    try {
+      const apiKey = process.env.GEMINI_API_KEY; // Store API key in env
+
+      const response = await axios.post(
+        "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
+        {
+          contents: [
+            {
+              parts: [
+                {
+                  text: `What is the stock ticker symbol for the company "${name}"? Return ONLY the ticker symbol, nothing else.`,
+                },
+              ],
+            },
+          ],
+        },
+        {
+          headers: { "Content-Type": "application/json" },
+          params: { key: apiKey },
+        }
+      );
+
+      tikkr = response.data?.candidates?.[0]?.content?.trim() || "UNKNOWN"; // Extract and clean ticker symbol
+    } catch (error) {
+      console.error("Gemini API Error:", error.message);
+    }
+
+    // Save company with fetched ticker symbol
+    const newCompany = new CompanyModel({
+      name,
+      date: new Date(date), // Convert string to Date object
+      noOfShares,
+      email,
+      tikkr, // Store ticker symbol
+    });
+
+    await newCompany.save();
+    res.status(201).json({ message: "Company added successfully", tikkr });
+  } catch (error) {
+    console.error("Database Save Error:", error);
+    res.status(500).json({ error: "Failed to add company", details: error.message });
+  }
+});
+
+app.get("/companies", verifyToken, async (req, res) => {
+  try {
+    const companies = await CompanyModel.find({ email: req.user.email });
+    res.json(companies);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+// = = = OTHERS = = = = 
+
+app.post("/alert-short", async (req, res) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) return res.status(500).send("Missing API Key");
+
+  const companies = req.body.companies;
+  console.log(companies)
+
+
+
+
+  try {
+    const response = await axios.post(
+      "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
+      {
+        contents: [
+          {
+            parts: [
+              {
+                text: `Fetch real-time data from Wall Street, Reddit, and X posts to analyze my invested ${companies}. Provide a 15-word summary on which are likely to decline and why, based on the latest sentiment and market trends.`
+              },
+            ],
+          },
+        ],
+      },
+      {
+        headers: { "Content-Type": "application/json" },
+        params: { key: apiKey },
+      }
+    );
+
+    const generatedText =
+      response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
+    res.json({ summary: generatedText });
+  } catch (error) {
+    console.error("Error:", error.response?.data || error.message);
+    res.status(500).send("Failed to fetch data");
+  }
+});
+
+app.post("/api/chat", async (req, res) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) return res.status(500).send("Missing API Key");
+
+  const userMessage = req.body.query;
+  const company = req.body.company;
+
+  console.log("User Input:", userMessage, "Company Name: ", company);
+
+  try {
+    const response = await axios.post(
+      "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
+      {
+        contents: [{ parts: [{ "text": `${userMessage} (User's message). Now, analyze the situation of ~${company} with a **concise, minimalist, and non-generic response**. The response should incorporate insights from **Reddit sentiment**, **SEC filings**, **Wall Street Journal**, **Bloomberg**, and other relevant sources. The goal is to provide **actionable intelligence**—not vague suggestions—so the user can make an informed decision. Avoid telling the user to consult a professional; assume they are assessing the model independently., let the response be binary yes or no. with some explanation on why.` }] }],
+      },
+      {
+        headers: { "Content-Type": "application/json" },
+        params: { key: apiKey },
+      }
+    );
+
+    const botResponse = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response from Gemini";
+    res.json({ response: botResponse });
+  } catch (error) {
+    console.error("Error:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to fetch response from Gemini" });
+  }
+});
 
 
 app.listen(5000, () => console.log("Server running on port 5000"));
