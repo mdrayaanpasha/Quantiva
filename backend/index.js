@@ -19,7 +19,12 @@ import investmentRouter from "./routers/investment.router.js";
 import companiesRouter from "./routers/companies.router.js";
 
 const app = express();
-app.use(cors())
+app.use(cors({
+  origin: "*", // Allow all origins — frontend, mobile, Postman, whoever
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+app.options("*", cors());
 app.use(morgan('dev')); // or 'combined'
 app.use(express.json());
 const apiKey = process.env.GEMINI_API_KEY;
