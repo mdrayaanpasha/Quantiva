@@ -14,6 +14,7 @@ dotenv.config();
 import userSchema from "./schemas/userSchema.js";
 import SubscriptionSchema from "./schemas/subscriptionSchema.js";
 import companySchema from "./schemas/companySchema.js";
+import AuthRouter from "./routers/auth.router.js";
 
 const app = express();
 app.use(cors())
@@ -100,6 +101,9 @@ const transporter = nodemailer.createTransport({
   service: "Gmail",
   auth: { user: process.env.EMAIL, pass: process.env.EMAIL_PASS },
 });
+
+
+// = = = = = = AUTH = = = = = =
 
 app.post("/api/register", async (req, res) => {
   const { username, email, password } = req.body;
@@ -202,6 +206,8 @@ app.post("/api/verify", async (req, res) => {
   }
 });
 
+
+app.use("/api/auth/", AuthRouter);
 
 
 
@@ -537,6 +543,8 @@ app.post("/fetchStockPrices", async (req, res) => {
           price: result,
           profit: profit.toFixed(2),
         });
+
+        console.log(stock)
 
       } catch (err) {
         console.error(`Error fetching data for ${stock.name}:`, err.message);
