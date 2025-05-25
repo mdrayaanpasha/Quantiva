@@ -4,7 +4,7 @@ import { verifyToken } from '../services/util.js';
 
 const subscriptionRouter = express.Router();
 
-subscriptionRouter.get("/api/subscriptions", verifyToken, SubscriptionController.getSubscriptions.bind(SubscriptionController));
+subscriptionRouter.get("/subscriptions", verifyToken, SubscriptionController.getSubscriptions.bind(SubscriptionController));
 subscriptionRouter.post("/subscribe", verifyToken, SubscriptionController.subscribeToCompany.bind(SubscriptionController));
 
 export default subscriptionRouter;
