@@ -1,5 +1,5 @@
 import express from 'express';
-import CompanyController from '../controllers/CompanyController.js'; // Adjust path if needed
+import CompanyController from '../controllers/companies.controller.js'; // Adjust path if needed
 import { verifyToken } from '../services/util.js';
 
 const companiesRouter = express.Router();
