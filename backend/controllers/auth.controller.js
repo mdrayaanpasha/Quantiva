@@ -46,7 +46,101 @@ class AuthController {
         await transporter.sendMail({
             to: email,
             subject: "Verify Your Email",
-            text: `Click here to verify: ${verifyLink}`,
+            html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Verify Your Email</title>
+            <style>
+                body {
+                    font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+                    margin: 0;
+                    padding: 0;
+                    background-color: #f4f4f4;
+                    -webkit-font-smoothing: antialiased;
+                    -moz-osx-font-smoothing: grayscale;
+                }
+                .container {
+                    max-width: 600px;
+                    margin: 40px auto;
+                    background-color: #ffffff;
+                    padding: 30px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                    text-align: center;
+                }
+                .header {
+                    padding-bottom: 20px;
+                    border-bottom: 1px solid #eeeeee;
+                    margin-bottom: 30px;
+                }
+                .header h1 {
+                    color: #333333;
+                    font-size: 28px;
+                    margin: 0;
+                    font-weight: 700;
+                }
+                .content p {
+                    color: #555555;
+                    font-size: 16px;
+                    line-height: 1.6;
+                    margin-bottom: 25px;
+                }
+                .button {
+                    display: inline-block;
+                    background-color: #000000; /* Black for primary action */
+                    color: #ffffff !important;
+                    padding: 14px 28px;
+                    border-radius: 6px;
+                    text-decoration: none;
+                    font-weight: 600;
+                    font-size: 17px;
+                    transition: background-color 0.2s ease-in-out;
+                }
+                .button:hover {
+                    background-color: #333333;
+                }
+                .footer {
+                    margin-top: 30px;
+                    padding-top: 20px;
+                    border-top: 1px solid #eeeeee;
+                    color: #aaaaaa;
+                    font-size: 13px;
+                }
+                .footer a {
+                    color: #888888;
+                    text-decoration: none;
+                }
+                .footer a:hover {
+                    text-decoration: underline;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>Verify Your Email Address</h1>
+                </div>
+                <div class="content">
+                    <p>Hi there,</p>
+                    <p>Thanks for signing up! To complete your registration and activate your account, please click the button below to verify your email address:</p>
+                    <a href="${verifyLink}" class="button">Verify My Email</a>
+                    <p style="margin-top: 30px;">If the button above doesn't work, you can also copy and paste the following link into your web browser:</p>
+                    <p style="word-break: break-all; font-size: 14px; color: #777777;">${verifyLink}</p>
+                    <p>This link is valid for a limited time. If you didn't create an account with us, please ignore this email.</p>
+                </div>
+                <div class="footer">
+                    <p>&copy; 2025 Your Company Name. All rights reserved.</p>
+                    <p>
+                        <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a>
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `,
         });
 
         res.json({ message: "Verification email sent" });
