@@ -18,10 +18,10 @@ export default function CompanyAnalysis() {
 
   useEffect(() => {
     const endpoints = [
-      { key: "reddit", url: `https://hackeverse-kjc.vercel.app/api/getReddit/${companyName}` },
-      { key: "sec", url: `https://hackeverse-kjc.vercel.app/api/getSEC/${companyName}` },
-      { key: "twitter", url: `https://hackeverse-kjc.vercel.app/api/getTwitter/${companyName}` },
-      { key: "wallstreet", url: `https://hackeverse-kjc.vercel.app/api/getWallstreet/${companyName}` }
+      { key: "reddit", url: `https://hackeverse-kjc.vercel.app/api/companies/getReddit/${companyName}` },
+      { key: "sec", url: `https://hackeverse-kjc.vercel.app/api/companies/getSEC/${companyName}` },
+      { key: "twitter", url: `https://hackeverse-kjc.vercel.app/api/companies/getTwitter/${companyName}` },
+      { key: "wallstreet", url: `https://hackeverse-kjc.vercel.app/api/companies/getWallstreet/${companyName}` }
     ];
 
     const fetchData = async () => {
@@ -47,9 +47,9 @@ export default function CompanyAnalysis() {
     if (!userInput.trim()) return;
     setChatLoading(true);
     setChatResponse(null);
-    
+
     try {
-      const response = await axios.post("https://hackeverse-kjc.vercel.app/api/chat", {
+      const response = await axios.post("https://hackeverse-kjc.vercel.app/api/others/chat", {
         query: userInput,
         company: companyName
       });

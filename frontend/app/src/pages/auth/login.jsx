@@ -17,13 +17,13 @@ export default function Login() {
     setSuccess("");
 
     try {
-      const response = await axios.post("https://hackeverse-kjc.vercel.app/api/login", formData);
-      
-      localStorage.removeItem("authToken");  // Clear old token 
-      console.log(response.data.token) 
-    localStorage.setItem("authToken", response.data.token);  
+      const response = await axios.post("https://hackeverse-kjc.vercel.app/api/auth/login", formData);
 
-  
+      localStorage.removeItem("authToken");  // Clear old token 
+      console.log(response.data.token)
+      localStorage.setItem("authToken", response.data.token);
+
+
       setSuccess("Login successful!");
       console.log("Login successful:", response.data);
     } catch (error) {

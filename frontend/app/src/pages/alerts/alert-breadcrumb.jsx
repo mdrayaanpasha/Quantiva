@@ -7,32 +7,34 @@ export default function AlertBreadCrumb() {
   const [summary, setSummary] = useState(null);
   const [visible, setVisible] = useState(false);
 
+  const token = localStorage.getItem("authToken");
+
   const getAuthHeader = () => {
-    const token = localStorage.getItem("authToken");
     return token ? { headers: { Authorization: `Bearer ${token}` } } : {};
   };
 
   useEffect(() => {
     const fetchSubscriptions = async () => {
       try {
-        const response = await axios.get("https://hackeverse-kjc.vercel.app/subscriptions", getAuthHeader());
+        const response = await axios.get("https://hackeverse-kjc.vercel.app/api/subscriptions/subscriptions", getAuthHeader());
         setSubscriptions(response.data.subscriptions || []);
       } catch (err) {
         console.error("Error fetching subscriptions", err);
       }
     };
-
-    fetchSubscriptions();
+    if (token) {
+      fetchSubscriptions();
+    }
   }, []);
 
   useEffect(() => {
     const fetchDataAPI = async () => {
       if (subscriptions.length > 0) {
         try {
-          const response = await axios.post("https://hackeverse-kjc.vercel.app/alert-short", { companies: subscriptions });
+          const response = await axios.post("https://hackeverse-kjc.vercel.app/api/others/alert-short", { companies: subscriptions });
           setSummary(response.data.summary);
           setVisible(true);
-          
+
           setTimeout(() => {
             setVisible(false);
           }, 10000);
@@ -41,14 +43,15 @@ export default function AlertBreadCrumb() {
         }
       }
     };
-    
-    fetchDataAPI();
+    if (token) {
+      fetchDataAPI();
+    }
   }, [subscriptions]);
 
-  if (!localStorage.getItem("authToken")) {
-    return(
-        <>
-        </>
+  if (token) {
+    return (
+      <>
+      </>
     )
   }
 
@@ -61,7 +64,7 @@ export default function AlertBreadCrumb() {
           exit={{ opacity: 0, x: 50 }}
           transition={{ duration: 0.3 }}
           className="fixed top-5 right-5 bg-black text-white p-4 rounded-xl shadow-lg w-80 flex justify-between items-center"
-          onClick={e=>window.location.href="./investments"}
+          onClick={e => window.location.href = "./investments"}
         >
           <p className="text-sm font-medium">{summary}</p>
           <button className="text-gray-400 hover:text-white" onClick={() => setVisible(false)}>✕</button>
