@@ -17,6 +17,7 @@ import companySchema from "./schemas/companySchema.js";
 import AuthRouter from "./routers/auth.router.js";
 import investmentRouter from "./routers/investment.router.js";
 import companiesRouter from "./routers/companies.router.js";
+import subscriptionRouter from "./routers/subscriptions.router.js";
 
 const app = express();
 app.use(cors({
@@ -33,10 +34,6 @@ mongoose
   .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("MongoDB connected successfully"))
   .catch((err) => console.error("MongoDB connection error:", err));
-
-
-
-
 
 
 // Company Schema
@@ -84,51 +81,14 @@ const fetchGeminiAnalysis = async (prompt) => {
   }
 };
 
-const transporter = nodemailer.createTransport({
-  service: "Gmail",
-  auth: { user: process.env.EMAIL, pass: process.env.EMAIL_PASS },
-});
 
 
 
 //  = = = = = = SUBSCRIPTION BASED = = = = == 
 
-app.get("/api/subscriptions", verifyToken, async (req, res) => {
-  try {
-    const email = req.user.email;
-    const subscriptions = await Subscription.find({ subscriber_email: email }).select("company -_id");
-
-    res.json({ subscriptions: subscriptions.map(sub => sub.company) });
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
-  }
-});
 
 
-app.post("/subscribe", verifyToken, async (req, res) => {
-  try {
-    let { company } = req.body;
-    const email = req.user.email;
-
-    if (!company || typeof company !== "string" || company.trim().length < 2) {
-      return res.status(400).json({ error: "Invalid company name" });
-    }
-
-    company = company.trim().toLowerCase();
-
-    // Insert directly, let MongoDB handle duplicates
-    const newSubscription = new Subscription({ company, subscriber_email: email });
-
-    await newSubscription.save();
-    res.json({ message: "Subscribed successfully" });
-
-  } catch (err) {
-    if (err.code === 11000) {
-      return res.status(400).json({ error: "Already subscribed to this company" });
-    }
-    res.status(500).json({ error: "Server error" });
-  }
-});
+app.use("/api/subscriptions", subscriptionRouter);
 
 
 // = = = = = = AUTH = = = = = =
