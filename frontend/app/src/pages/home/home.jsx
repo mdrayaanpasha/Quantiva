@@ -77,7 +77,7 @@ export default function Home() {
             Harness machine learning to analyze market data from multiple sources and make informed investment decisions
           </p>
           <div className="flex justify-center gap-4">
-            <Link to="/explore" className="inline-flex items-center px-8 py-4 bg-black text-white rounded-xl hover:bg-blue-700 transition-all">
+            <Link to="/register" className="inline-flex items-center px-8 py-4 bg-black text-white rounded-xl hover:bg-blue-700 transition-all">
               Start For Free
               <ArrowRightIcon className="ml-2 h-5 w-5" />
             </Link>
