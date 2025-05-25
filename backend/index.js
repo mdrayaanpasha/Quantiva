@@ -93,7 +93,7 @@ const transporter = nodemailer.createTransport({
 
 //  = = = = = = SUBSCRIPTION BASED = = = = == 
 
-app.get("/subscriptions", verifyToken, async (req, res) => {
+app.get("/api/subscriptions", verifyToken, async (req, res) => {
   try {
     const email = req.user.email;
     const subscriptions = await Subscription.find({ subscriber_email: email }).select("company -_id");
