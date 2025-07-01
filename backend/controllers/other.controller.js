@@ -43,7 +43,14 @@ class otherController {
                             text: `Using real-time insights from Wall Street, Reddit, and X, analyze my investments in ${companies.join(", ")}. Identify stocks likely to decline based on current sentiment, trends, and market narratives. Provide exactly 3 sharp bullet points with sources or referenced discussions. No intros, no disclaimers, no filler.`
                         }]
                     }],
-                    generationConfig: { temperature: 0.8, topP: 0.8, maxOutputTokens: 100 }
+                    generationConfig:
+                    {
+                        "temperature": 0.8,
+                        "topP": 0.9,
+                        "maxOutputTokens": 100,
+                        "presencePenalty": 0.7,
+                        "frequencyPenalty": 0.7
+                    }
                 },
                 { headers: { "Content-Type": "application/json" }, params: { key: this.apiKey } }
             );
@@ -82,7 +89,14 @@ class otherController {
                             text: `${userMessage} (User's message). Analyze ${company} and deliver a concise, decision-oriented answer using insights from Reddit sentiment, SEC filings, Wall Street Journal, Bloomberg, and major investor conversations. Provide a 'Yes' or 'No' decision with 1-2 sentence justification. No intros, disclaimers, or chatbot language. Reference specific posts, articles, or filings when possible.`
                         }]
                     }],
-                    generationConfig: { temperature: 0.8, topP: 0.8, maxOutputTokens: 100 }
+                    generationConfig:
+                    {
+                        "temperature": 0.8,
+                        "topP": 0.9,
+                        "maxOutputTokens": 100,
+                        "presencePenalty": 0.7,
+                        "frequencyPenalty": 0.7
+                    }
                 },
                 { headers: { "Content-Type": "application/json" }, params: { key: this.apiKey } }
             );

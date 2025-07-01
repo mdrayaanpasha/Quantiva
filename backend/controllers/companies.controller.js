@@ -33,10 +33,13 @@ class CompanyController {
                 {
                     contents: [{ parts: [{ text: prompt }] }],
                     generationConfig: {
-                        temperature: 0.8,
-                        topP: 0.8,
-                        maxOutputTokens: 100
+                        "temperature": 0.8,
+                        "topP": 0.9,
+                        "maxOutputTokens": 100,
+                        "presencePenalty": 0.7,
+                        "frequencyPenalty": 0.7
                     }
+
                 },
                 { headers: { "Content-Type": "application/json" }, params: { key: apiKey } }
             );
@@ -158,7 +161,8 @@ class CompanyController {
                                 text: `What is the exact stock ticker symbol for the company "${name}"? Reply ONLY with the ticker symbol. No other words.`
                             }]
                         }],
-                        generationConfig: { temperature: 0, maxOutputTokens: 10 }
+                        generationConfig:
+                            { temperature: 0, maxOutputTokens: 10 }
                     },
                     { headers: { "Content-Type": "application/json" }, params: { key: apiKey } }
                 );

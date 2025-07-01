@@ -48,7 +48,14 @@ class InvestmentsController {
                 "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
                 {
                     contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { temperature: 0.8, topP: 0.8, maxOutputTokens: 100 }
+                    generationConfig:
+                    {
+                        "temperature": 0.8,
+                        "topP": 0.9,
+                        "maxOutputTokens": 100,
+                        "presencePenalty": 0.7,
+                        "frequencyPenalty": 0.7
+                    }
                 },
                 { headers: { "Content-Type": "application/json" }, params: { key: apiKey } }
             );
@@ -88,7 +95,14 @@ class InvestmentsController {
                 "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
                 {
                     contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { temperature: 0.8, topP: 0.8, maxOutputTokens: 100 }
+                    generationConfig:
+                    {
+                        "temperature": 0.8,
+                        "topP": 0.9,
+                        "maxOutputTokens": 100,
+                        "presencePenalty": 0.7,
+                        "frequencyPenalty": 0.7
+                    }
                 },
                 { headers: { "Content-Type": "application/json" }, params: { key: apiKey } }
             );
