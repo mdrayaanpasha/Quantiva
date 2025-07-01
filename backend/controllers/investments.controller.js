@@ -3,8 +3,16 @@ import mongoose from "mongoose";
 import axios from "axios";
 import dotenv from "dotenv";
 import yahooFinance from "yahoo-finance2";
+import redis from "redis";
+import crypto from "crypto";
 
 dotenv.config();
+
+const redisClient = redis.createClient({
+    url: process.env.REDIS_URL || "redis://localhost:6379"
+});
+
+redisClient.connect().catch(console.error);
 
 import userSchema from "../schemas/userSchema.js";
 import SubscriptionSchema from "../schemas/subscriptionSchema.js";
@@ -16,7 +24,7 @@ const CompanyModel = mongoose.model("Company", companySchema);
 
 class InvestmentsController {
 
-    async badInvestMentAnalysis(req, res) {
+    async badInvestmentAnalysis(req, res) {
         const { companies } = req.body;
         const apiKey = process.env.GEMINI_API_KEY;
 
@@ -25,23 +33,31 @@ class InvestmentsController {
             return res.status(400).send("Invalid company list");
         }
 
+        const cacheKey = `badInvest:${crypto.createHash('md5').update(JSON.stringify(companies)).digest('hex')}`;
+
         try {
-            const prompt = `Analyze the financial performance of the following companies: ${companies.join(", ")} based on recent Wall Street Journal articles and Reddit posts. Identify which are underperforming and explain why, using only insights from those sources. Be minimalist. No disclaimers, no intros, no chatbot-style language — just the facts.`;
+            const cachedData = await redisClient.get(cacheKey);
+            if (cachedData) {
+                console.log("Serving from Redis cache");
+                return res.json({ analysis: JSON.parse(cachedData), source: "WSJ & Reddit" });
+            }
+
+            const prompt = `Analyze the financial performance of these companies: ${companies.join(", ")} using recent Wall Street Journal articles and Reddit posts. Identify underperformers and explain why, citing exact articles, posts, or user discussions when possible. Deliver exactly 5 sharp bullet points. No fluff or disclaimers.`;
 
             const response = await axios.post(
                 "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
                 {
                     contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { temperature: 0.2, topP: 0.8, maxOutputTokens: 300 }
                 },
-                {
-                    headers: { "Content-Type": "application/json" },
-                    params: { key: apiKey },
-                }
+                { headers: { "Content-Type": "application/json" }, params: { key: apiKey } }
             );
 
             const generatedText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
-            console.log(generatedText);
-            res.json({ analysis: generatedText });
+
+            await redisClient.setEx(cacheKey, 3600, JSON.stringify(generatedText));
+
+            res.json({ analysis: generatedText, source: "WSJ & Reddit" });
         } catch (error) {
             console.error("Error:", error.response?.data || error.message);
             res.status(500).send("Failed to fetch analysis");
@@ -57,23 +73,31 @@ class InvestmentsController {
             return res.status(400).send("Invalid company list");
         }
 
+        const cacheKey = `goodInvest:${crypto.createHash('md5').update(JSON.stringify(companies)).digest('hex')}`;
+
         try {
-            const prompt = `Analyze the financial performance of the following companies: ${companies.join(", ")} based on recent Wall Street Journal articles and Reddit posts. Identify which are performing well and explain why, using only insights from those sources. Be minimalist. No disclaimers, no intros, no chatbot-style language — just the facts.`;
+            const cachedData = await redisClient.get(cacheKey);
+            if (cachedData) {
+                console.log("Serving from Redis cache");
+                return res.json({ analysis: JSON.parse(cachedData), source: "WSJ & Reddit" });
+            }
+
+            const prompt = `Analyze the financial performance of these companies: ${companies.join(", ")} using recent Wall Street Journal articles and Reddit posts. Identify the strongest performers and explain why, citing specific articles, posts, or key Reddit discussions when possible. Deliver exactly 5 focused bullet points. No disclaimers or intros.`;
 
             const response = await axios.post(
                 "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent",
                 {
                     contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { temperature: 0.2, topP: 0.8, maxOutputTokens: 300 }
                 },
-                {
-                    headers: { "Content-Type": "application/json" },
-                    params: { key: apiKey },
-                }
+                { headers: { "Content-Type": "application/json" }, params: { key: apiKey } }
             );
 
             const generatedText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
-            console.log(generatedText);
-            res.json({ analysis: generatedText });
+
+            await redisClient.setEx(cacheKey, 3600, JSON.stringify(generatedText));
+
+            res.json({ analysis: generatedText, source: "WSJ & Reddit" });
         } catch (error) {
             console.error("Error:", error.response?.data || error.message);
             res.status(500).send("Failed to fetch analysis");
@@ -85,6 +109,14 @@ class InvestmentsController {
             const { stocks } = req.body;
             if (!Array.isArray(stocks) || stocks.length === 0) {
                 return res.status(400).json({ error: "Invalid stock data format" });
+            }
+
+            const cacheKey = `scoreInvest:${crypto.createHash('md5').update(JSON.stringify(stocks)).digest('hex')}`;
+
+            const cachedData = await redisClient.get(cacheKey);
+            if (cachedData) {
+                console.log("Serving from Redis cache");
+                return res.json(JSON.parse(cachedData));
             }
 
             const today = Math.floor(Date.now() / 1000);
@@ -103,8 +135,7 @@ class InvestmentsController {
                         continue;
                     }
 
-                    console.log(`Workspaceing data for ${stock.name}...`);
-                    // Ensure yahooFinance is correctly imported and used
+                    console.log(`Fetching data for ${stock.name}...`);
                     const result = await yahooFinance.historical(stock.name, {
                         period1: startDate,
                         period2: today,
@@ -128,8 +159,6 @@ class InvestmentsController {
                         profit: profit.toFixed(2),
                     });
 
-                    console.log(stock);
-
                 } catch (err) {
                     console.error(`Error fetching data for ${stock.name}:`, err.message);
                 }
@@ -140,9 +169,8 @@ class InvestmentsController {
             }
 
             const apiKey = process.env.GEMINI_API_KEY;
-            // Removed fetchGeminiAnalysis since it was unused and the axios call is directly inlined
+
             const tempStockData = stockData.map(({ price, ...rest }) => rest);
-            console.log("tempstock", tempStockData);
 
             try {
                 const response = await axios.post(
@@ -150,7 +178,7 @@ class InvestmentsController {
                     {
                         contents: [{
                             parts: [{
-                                text: `Here is my investment data: ${JSON.stringify(tempStockData, null, 2)}. Act as an investment portfolio analyst. Score each stock out of 100 and explain how they align with recent Reddit and Twitter market trends. Be concise, specific, and avoid generic statements or disclaimers.`
+                                text: `Here is my investment data: ${JSON.stringify(tempStockData, null, 2)}. As a portfolio analyst, score each stock out of 100 based on profitability and alignment with Reddit and Twitter market sentiment. Use recent trends, popular opinions, and major influencers to justify the scores. Deliver scores and explanations in bullet points. No intros, disclaimers, or chatbot filler.`
                             }]
                         }],
                     },
@@ -161,7 +189,12 @@ class InvestmentsController {
                 );
 
                 const botResponse = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response from Gemini";
-                res.send({ textAnlaysis: botResponse, Numerical: stockData });
+
+                const responseData = { textAnalysis: botResponse, Numerical: stockData, source: "Reddit & Twitter" };
+
+                await redisClient.setEx(cacheKey, 3600, JSON.stringify(responseData));
+
+                res.json(responseData);
 
             } catch (error) {
                 console.error("Error:", error.response?.data || error.message);
