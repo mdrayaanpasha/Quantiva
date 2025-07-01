@@ -33,7 +33,7 @@ class CompanyController {
                 {
                     contents: [{ parts: [{ text: prompt }] }],
                     generationConfig: {
-                        temperature: 0.2,
+                        temperature: 0.8,
                         topP: 0.8,
                         maxOutputTokens: 100
                     }
