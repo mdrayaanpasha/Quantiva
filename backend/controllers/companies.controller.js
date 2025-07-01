@@ -35,7 +35,7 @@ class CompanyController {
                     generationConfig: {
                         temperature: 0.2,
                         topP: 0.8,
-                        maxOutputTokens: 300
+                        maxOutputTokens: 100
                     }
                 },
                 { headers: { "Content-Type": "application/json" }, params: { key: apiKey } }
